@@ -149,11 +149,11 @@ int main(int argc, const char * argv[]) {
     
     
     //Generate a constraint circle from known length ratio between two non parallel lines
-    float dx1 = warpedLines[0][0] - warpedLines[0][2];
-    float dy1 = warpedLines[0][1] - warpedLines[0][3];
+    float dx1 = warpedLines[1][0] - warpedLines[1][2];
+    float dy1 = warpedLines[1][1] - warpedLines[1][3];
     
-    float dx2 = warpedLines[2][0] - warpedLines[2][2];
-    float dy2 = warpedLines[2][1] - warpedLines[2][3];
+    float dx2 = warpedLines[3][0] - warpedLines[3][2];
+    float dy2 = warpedLines[3][1] - warpedLines[3][3];
     
     float ratio = 1; // Horizontal and vertical lines are of equal length
     
