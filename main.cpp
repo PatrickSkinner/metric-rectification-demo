@@ -185,17 +185,21 @@ int main(int argc, const char * argv[]) {
     vector<Point2f> metr;
     perspectiveTransform( rect , metr, metricTransform);
     
+    // Choose a line we want to be vertical in our image and rotate the line set accordingly.
+    Vec4f vertLine = Vec4f(metr[0].x, metr[0].y, metr[1].x, metr[1].y);
+    double angle = 90 - getAngle(vertLine);
+    Mat rotationMat = getRotationMatrix2D(Point(250,250), angle, 1);
+    for( int i = 0; i < metr.size(); i++){
+        Mat point;
+        Mat(metr[i], CV_64F).convertTo(point, CV_64F);
+        point = point.t() * rotationMat;
+        metr[i].x = point.at<double>(0);
+        metr[i].y = point.at<double>(1);
+    }
+    
     for( int i = 0; i < metr.size(); i += 2){
         line( srcMetr, Point(metr[i].x, metr[i].y), Point(metr[i+1].x, metr[i+1].y), Scalar(0,0,255), 2, 0);
     }
-    
-    // Add rotation so all lines aare perfectly vertical or horizontal.
-    /*
-    Mat rotationMat = getRotationMatrix2D(Point(250,250), -4, 1);
-    Mat srcRot = Mat(500, 1000, CV_8UC1, Scalar(255,255,255));
-    warpAffine(srcMetr, srcRot, rotationMat, Size(500,500));
-    imshow("Final Pls", srcRot);
-    */
     
     imshow("Original", src); // Original unwarped image.
     imshow("Unrectified", srcWarped); // Perspective warped image.
