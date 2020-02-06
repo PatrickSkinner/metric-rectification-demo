@@ -52,7 +52,12 @@ Point2f intersectTwoCircles(float x1, float y1, float r1, float x2, float y2, fl
     // note if gy == 0 and gx == 0 then the circles are tangent and there is only one solution
     // but that one solution will just be duplicated as the code is currently written
 
-    return Point2f(ix2, iy2);
+    // Always return the intersection with a positive y coordinate, otherwise resulting rectification will be mirrored.
+    if(iy1 > 0){
+        return Point2f(ix1, iy1);
+    } else {
+        return Point2f(ix1, iy2);
+    }
 }
 
 int main(int argc, const char * argv[]) {
