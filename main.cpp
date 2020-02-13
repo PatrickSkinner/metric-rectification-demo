@@ -122,17 +122,29 @@ int main(int argc, const char * argv[]) {
     // Perform affine rectification
     vector<Point2f> rect;
     perspectiveTransform( out , rect, affineTransform);
-    
     for( int i = 0; i < rect.size(); i += 2){
         line( srcRect, Point(rect[i].x, rect[i].y), Point(rect[i+1].x, rect[i+1].y), Scalar(0,0,255), 2, 0);
     }
     
+    
+    vector<Vec3f> hmgLinesAffine;
+    vector<Vec4f> warpedLinesAffine;
+    
+    for( int i = 0; i < rect.size(); i += 2){
+        line( srcRect, Point(rect[i].x, rect[i].y), Point(rect[i+1].x, rect[i+1].y), Scalar(0,0,255), 2, 0);
+        hmgLinesAffine.push_back( constrainVec(Vec3f(rect[i].x, rect[i].y, 1).cross( Vec3f(rect[i+1].x, rect[i+1].y, 1) ) ));
+        warpedLinesAffine.push_back( Vec4f{rect[i].x, rect[i].y, rect[i+1].x, rect[i+1].y });
+    }
+    
+    
     Mat constraints = Mat(500, 500, CV_8UC1, Scalar(255,255,255));
     
+    if(hmgLinesAffine[2][0] < 0.000001) hmgLinesAffine[2][0] = 0.000001; // Slight adjustment of horizontal lines to prevent division by 0
+    
     // Generate a constraint circle from a known angle between lines
-    float a = (-hmgLines[0][1]) / hmgLines[0][0]; // vert
-    float b = (-hmgLines[2][1]) / hmgLines[2][0]; // hori
-    float theta = CV_PI / 2;
+    float a = (-hmgLinesAffine[0][1]) / hmgLinesAffine[0][0]; // vert
+    float b = (-hmgLinesAffine[2][1]) / hmgLinesAffine[2][0]; // hori
+    float theta = CV_PI/2;
     
     float ca = (a+b)/2 ;
     float cb = ((a-b)/2) * cotan(theta);
@@ -154,11 +166,11 @@ int main(int argc, const char * argv[]) {
     
     
     //Generate a constraint circle from known length ratio between two non parallel lines
-    float dx1 = warpedLines[1][0] - warpedLines[1][2];
-    float dy1 = warpedLines[1][1] - warpedLines[1][3];
+    float dx1 = warpedLinesAffine[1][0] - warpedLinesAffine[1][2];
+    float dy1 = warpedLinesAffine[1][1] - warpedLinesAffine[1][3];
     
-    float dx2 = warpedLines[3][0] - warpedLines[3][2];
-    float dy2 = warpedLines[3][1] - warpedLines[3][3];
+    float dx2 = warpedLinesAffine[3][0] - warpedLinesAffine[3][2];
+    float dy2 = warpedLinesAffine[3][1] - warpedLinesAffine[3][3];
     
     float ratio = 1; // Horizontal and vertical lines are of equal length
     
