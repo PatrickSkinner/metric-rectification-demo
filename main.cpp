@@ -75,6 +75,7 @@ int main(int argc, const char * argv[]) {
         line( src, Point(l[0], l[1]), Point(l[2], l[3]), Scalar(0,0,255), 2, 5 );
     }
     
+    // Apply perspective transformation to line set
     vector<Point2f> corners {Point2f(100,100), Point2f(100,400), Point2f(400,400), Point2f(400,100)};
     vector<Point2f> warpedCorners {Point2f(140,120), Point2f(100,400), Point2f(380,345), Point2f(400,100)};
     
@@ -110,6 +111,7 @@ int main(int argc, const char * argv[]) {
     
     line( src , Point(intersection1[0], intersection1[1]), Point(intersection2[0], intersection2[1]), Scalar(0,0,255), 2, 5 );
     
+    // Create affine transformation matrix from line at infinity.
     Mat affineTransform = Mat(3, 3, CV_32F, 0.0);
     affineTransform.at<float>(0,0) = 1.0;
     affineTransform.at<float>(1,1) = 1.0;
@@ -126,7 +128,7 @@ int main(int argc, const char * argv[]) {
         line( srcRect, Point(rect[i].x, rect[i].y), Point(rect[i+1].x, rect[i+1].y), Scalar(0,0,255), 2, 0);
     }
     
-    
+    // Create affine rectified line sets, both in homogenous form and in form Vec4f(x1,y1,x2,y2).
     vector<Vec3f> hmgLinesAffine;
     vector<Vec4f> warpedLinesAffine;
     
@@ -141,7 +143,7 @@ int main(int argc, const char * argv[]) {
     
     if(hmgLinesAffine[2][0] < 0.000001) hmgLinesAffine[2][0] = 0.000001; // Slight adjustment of horizontal lines to prevent division by 0
     
-    // Generate a constraint circle from a known angle between lines
+    // Generate a constraint circle from known 90 degree angle between lines
     float a = (-hmgLinesAffine[0][1]) / hmgLinesAffine[0][0]; // vert
     float b = (-hmgLinesAffine[2][1]) / hmgLinesAffine[2][0]; // hori
     float theta = CV_PI/2;
@@ -150,10 +152,10 @@ int main(int argc, const char * argv[]) {
     float cb = ((a-b)/2) * cotan(theta);
     float r = abs( (a-b) / (2 * sin(theta)) );
     
-    circle(constraints, Point(ca+250,cb+250), r, Scalar(0,255,0));
+    circle(constraints, Point(ca+250,cb+250), r, Scalar(0,255,0)); // Draw constraint circle.
 
     
-    // Generate a constraint circle from a known angle between lines
+    // Generate a constraint circle from known 90 degree angle between lines
     /*
     a = (-hmgLines[1][1]) / hmgLines[1][0]; // vert
     b = (-hmgLines[3][1]) / hmgLines[3][0]; // hori
@@ -163,7 +165,6 @@ int main(int argc, const char * argv[]) {
     
     circle(constraints, Point(ca2+250 ,cb2 + 250), r2, Scalar(0,255,0));
     */
-    
     
     //Generate a constraint circle from known length ratio between two non parallel lines
     float dx1 = warpedLinesAffine[1][0] - warpedLinesAffine[1][2];
@@ -178,7 +179,7 @@ int main(int argc, const char * argv[]) {
     float cb3 = 0;
     float r3 = abs( (ratio*(dx2*dy1-dx1*dy2)) / ((dy1*dy1)-(ratio*ratio)*(dy2*dy2)) );
 
-    circle(constraints, Point(ca3+250 ,cb3 + 250), r3, Scalar(0,255,0));
+    circle(constraints, Point(ca3+250 ,cb3 + 250), r3, Scalar(0,255,0)); // Draw constraint circle.
 
     // Draw axes
     line( constraints, Point(0, 250), Point(500, 250), Scalar(0,0,128));
@@ -190,6 +191,7 @@ int main(int argc, const char * argv[]) {
     cout << "Contraint Intersection: " << inter << endl;
     //circle(constraints, Point(inter.x, inter.y), 5, Scalar(0,0,0), FILLED);
     
+    // Create metric rectification matrix from constraint circle intersection.
     Mat metricTransform = Mat(3, 3, CV_32F, 0.0);
     metricTransform.at<float>(0,0) = 1 / inter.y;
     metricTransform.at<float>(0,1) = -(inter.x/inter.y);
@@ -214,6 +216,7 @@ int main(int argc, const char * argv[]) {
         metr[i].y = point.at<double>(1);
     }
     
+    // Draw metric rectified line set.
     for( int i = 0; i < metr.size(); i += 2){
         line( srcMetr, Point(metr[i].x, metr[i].y), Point(metr[i+1].x, metr[i+1].y), Scalar(0,0,255), 2, 0);
     }
